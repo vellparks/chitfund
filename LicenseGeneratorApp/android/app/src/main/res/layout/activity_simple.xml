@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0f172a"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:id="@+id/rootContainer"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:id="@+id/cardRoot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="#020617"
+            android:padding="16dp"
+            android:layout_margin="16dp">
+
+            <ImageView
+                android:id="@+id/logoImage"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/setlive_logo"
+                android:contentDescription="Logo"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/nameText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SETLIVE"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#e5e7eb" />
+
+            <TextView
+                android:id="@+id/subText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="License Key Generator"
+                android:textSize="12sp"
+                android:textColor="#9ca3af"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/productLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Product Code"
+                android:textSize="12sp"
+                android:textColor="#9ca3af"
+                android:layout_marginTop="16dp" />
+
+            <EditText
+                android:id="@+id/productInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="XXXX-XXXX-XXXX-XXXX"
+                android:inputType="textCapCharacters"
+                android:textColor="#e5e7eb"
+                android:textColorHint="#6b7280"
+                android:background="#020617"
+                android:padding="8dp"
+                android:layout_marginTop="4dp"
+                android:maxLines="1" />
+
+            <Button
+                android:id="@+id/generateButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Generate License Key"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="#22c55e"
+                android:textColor="#020617" />
+
+            <TextView
+                android:id="@+id/licenseLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="License Key"
+                android:textSize="12sp"
+                android:textColor="#9ca3af"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/licenseValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#22c55e"
+                android:layout_marginTop="4dp"
+                android:padding="8dp"
+                android:background="#020617" />
+
+            <Button
+                android:id="@+id/copyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Copy"
+                android:layout_marginTop="8dp"
+                android:layout_gravity="end"
+                android:backgroundTint="#1d4ed8"
+                android:textColor="#e5e7eb" />
+
+            <TextView
+                android:id="@+id/errorText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="#f97316"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/themeLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Theme"
+                android:textSize="12sp"
+                android:textColor="#9ca3af"
+                android:layout_marginTop="16dp" />
+
+            <LinearLayout
+                android:id="@+id/themeButtons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="4dp">
+
+                <Button
+                    android:id="@+id/themeDark"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Dark"
+                    android:backgroundTint="#020617"
+                    android:textColor="#e5e7eb" />
+
+                <Button
+                    android:id="@+id/themeBlue"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Blue"
+                    android:layout_marginLeft="8dp"
+                    android:backgroundTint="#1d4ed8"
+                    android:textColor="#e5e7eb" />
+
+                <Button
+                    android:id="@+id/themeGreen"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Green"
+                    android:layout_marginLeft="8dp"
+                    android:backgroundTint="#047857"
+                    android:textColor="#e5e7eb" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

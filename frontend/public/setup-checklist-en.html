@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Setup Checklist — English</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { --primary:#2563eb; --text:#0f172a; --muted:#475569; --border:#cbd5e1; --bg:#ffffff; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg)}
+    .page{max-width:860px;margin:0 auto;padding:32px 24px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:2px solid var(--border);padding-bottom:12px}
+    h1{font-size:24px;margin:0;color:var(--primary);font-weight:800}
+    .sub{font-size:13px;color:var(--muted)}
+    section{margin:18px 0 8px;padding:16px;border:1px solid var(--border);border-radius:10px;background:#f8fafc}
+    h2{font-size:18px;margin:0 0 8px}
+    .card{padding:12px 14px;background:#ffffff;border:1px solid var(--border);border-radius:8px}
+    .title{font-weight:700;margin-bottom:8px;color:var(--primary)}
+    ul{margin:8px 0 0;padding-left:18px}
+    li{margin:6px 0}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    footer{margin-top:24px;font-size:12px;color:var(--muted)}
+    @media print{body{background:#fff}.page{padding:0}header{border:none;margin-bottom:8px;padding:0}section{break-inside:avoid;background:#fff}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div style="display:flex;align-items:center;gap:12px">
+        <img id="brandLogo" alt="logo" style="height:40px;width:auto;display:none" />
+        <div>
+          <div id="brandName" style="font-weight:800;font-size:18px;color:var(--primary)">Finance Manager</div>
+          <div id="brandCompany" class="sub"></div>
+        </div>
+      </div>
+      <div>
+        <h1 style="text-align:right">Setup Checklist — English</h1>
+        <div class="sub" style="text-align:right">Print: Ctrl/Cmd + P → Save as PDF</div>
+      </div>
+    </header>
+
+    <section>
+      <div class="card">
+        <div class="title">Minimal Configuration</div>
+        <ul>
+          <li>Windows 10/11 64‑bit</li>
+          <li>RAM: 4GB (8GB recommended)</li>
+          <li>Disk: 2GB free</li>
+          <li>Ports open: 8000 (API), 5173 (Frontend)</li>
+          <li>Browser: Chrome/Edge latest</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="card">
+        <div class="title">Required Apps</div>
+        <ul>
+          <li>Node.js LTS (18/20) with npm</li>
+          <li>Python 3.10+ with pip</li>
+          <li>Git</li>
+          <li>Visual Studio Code</li>
+          <li>Optional: Postman/Bruno</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="card">
+        <div class="title">Backend Setup</div>
+        <ul>
+          <li class="mono">python -m venv .venv</li>
+          <li>Activate venv → install packages</li>
+          <li class="mono">pip install -r requirements.txt</li>
+          <li>Run API:
+            <div class="mono">python -m uvicorn main:app --reload --port 8000</div>
+          </li>
+          <li>Optional .env keys:
+            <div class="sub">TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_SMS_FROM, TWILIO_WHATSAPP_FROM, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET</div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="card">
+        <div class="title">Frontend Setup</div>
+        <ul>
+          <li class="mono">npm install</li>
+          <li class="mono">npm run dev</li>
+          <li>Theme & settings persist in localStorage</li>
+          <li>UI: http://localhost:5173</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="card">
+        <div class="title">Networking & OS</div>
+        <ul>
+          <li>Windows Firewall: allow inbound 8000, 5173</li>
+          <li>API: http://localhost:8000/settings</li>
+          <li>UI: http://localhost:5173</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="card">
+        <div class="title">Optional Tools</div>
+        <ul>
+          <li>GitHub Desktop</li>
+          <li>nvs (Node Version Switcher)</li>
+          <li>Image tools (Paint/Photos) — logo upload</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>Print this page as PDF. Update settings and re‑print if needed.</footer>
+  </div>
+  <script>
+    (function(){try{var raw=localStorage.getItem('system_settings_last');if(!raw)return;var s=JSON.parse(raw);var logo=document.getElementById('brandLogo');var name=document.getElementById('brandName');var company=document.getElementById('brandCompany');if(s.logo_base64){logo.src=s.logo_base64;logo.style.display='block'}if(s.app_name)name.textContent=s.app_name;if(s.company_name)company.textContent=s.company_name}catch(e){e}})();
+  </script>
+</body>
+</html>

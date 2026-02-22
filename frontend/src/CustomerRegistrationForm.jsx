@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 
 function CustomerRegistrationForm({ onComplete, initialData, onCancel }) {
   const isEdit = !!initialData;
@@ -35,6 +36,15 @@ function CustomerRegistrationForm({ onComplete, initialData, onCancel }) {
   const [showCamera, setShowCamera] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
+  const apiPost = async (path, data) => {
+    const base = getApiBase();
+    return axios.post(`${base}${path}`, data);
+  };
+  const apiPut = async (path, data) => {
+    const base = getApiBase();
+    return axios.put(`${base}${path}`, data);
+  };
 
   const sanitizePhoneInput = (v) => (v || '').replace(/\D/g, '').slice(0, 10);
   const sanitizeAadhaarInput = (v) => (v || '').replace(/\D/g, '').slice(0, 12);
@@ -149,10 +159,10 @@ function CustomerRegistrationForm({ onComplete, initialData, onCancel }) {
         pan_no: (formData.pan_no || '').toUpperCase().trim()
       };
       if (isEdit) {
-        await axios.put(`http://localhost:9000/customers/${initialData.id}`, payload);
+        await apiPut(`/customers/${initialData.id}`, payload);
         setMessage({ type: 'success', text: 'வாடிக்கையாளர் விவரங்கள் புதுப்பிக்கப்பட்டது!' });
       } else {
-        await axios.post('http://localhost:9000/customers/', payload);
+        await apiPost('/customers/', payload);
         setMessage({ type: 'success', text: 'வாடிக்கையாளர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்!' });
       }
       

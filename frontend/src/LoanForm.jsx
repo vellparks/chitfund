@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 
 function LoanForm({ isStaff = false, onComplete }) {
   const [customers, setCustomers] = useState([]);
@@ -21,24 +22,67 @@ function LoanForm({ isStaff = false, onComplete }) {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [receipt, setReceipt] = useState(null);
 
+  const apiGet = async (path) => {
+    const base = getApiBase();
+    return axios.get(`${base}${path}`);
+  };
+  const apiPost = async (path, data) => {
+    const base = getApiBase();
+    return axios.post(`${base}${path}`, data);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setMessage({ type: '', text: '' });
+      let errorParts = [];
+
+      let custRes = null;
+      let agentRes = null;
+      let setRes = null;
+
       try {
-        const [custRes, agentRes, setRes] = await Promise.all([
-          axios.get('http://localhost:9000/customers/'),
-          axios.get('http://localhost:9000/users/agents'),
-          axios.get('http://localhost:9000/settings')
-        ]);
-        setCustomers(Array.isArray(custRes.data) ? custRes.data : []);
-        setAgents(Array.isArray(agentRes.data) ? agentRes.data : []);
-        setSystemSettings(setRes.data);
+        custRes = await apiGet('/customers/');
       } catch (err) {
-        console.error('Error loading form data:', err);
-        setMessage({ type: 'error', text: 'Error loading data. Please refresh.' });
-      } finally {
-        setLoading(false);
+        console.error('Error loading customers for loan form:', err);
+        const detail = err?.response?.data?.detail || err.message || 'unknown error';
+        errorParts.push(`customers (${detail})`);
       }
+
+      try {
+        agentRes = await apiGet('/users/agents');
+      } catch (err) {
+        console.error('Error loading agents for loan form:', err);
+        const detail = err?.response?.data?.detail || err.message || 'unknown error';
+        errorParts.push(`agents (${detail})`);
+      }
+
+      try {
+        setRes = await apiGet('/settings');
+      } catch (err) {
+        console.error('Error loading settings for loan form:', err);
+        const detail = err?.response?.data?.detail || err.message || 'unknown error';
+        errorParts.push(`settings (${detail})`);
+      }
+
+      if (custRes && Array.isArray(custRes.data)) {
+        setCustomers(custRes.data);
+      }
+      if (agentRes && Array.isArray(agentRes.data)) {
+        setAgents(agentRes.data);
+      }
+      if (setRes && setRes.data) {
+        setSystemSettings(setRes.data);
+      }
+
+      if (errorParts.length > 0) {
+        setMessage({
+          type: 'error',
+          text: 'Error loading data: ' + errorParts.join('; ')
+        });
+      }
+
+      setLoading(false);
     };
     fetchData();
   }, []);
@@ -88,7 +132,7 @@ function LoanForm({ isStaff = false, onComplete }) {
         total_days: parseInt(formData.total_days)
       };
       
-      const response = await axios.post('http://localhost:9000/loans/', payload);
+      const response = await apiPost('/loans/', payload);
       const customer = customers.find(c => c.id === parseInt(formData.customer_id));
       const disbursedAmount = parseFloat(formData.amount) - parseFloat(formData.deduction || 0);
 

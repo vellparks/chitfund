@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 import LoanForm from './LoanForm';
 import CustomerRegistrationForm from './CustomerRegistrationForm';
 import AgentRegistrationForm from './AgentRegistrationForm';
@@ -56,7 +57,8 @@ function StaffDashboard({ user, systemSettings }) {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get('http://localhost:9000/customers/');
+      const base = getApiBase();
+      const response = await axios.get(`${base}/customers/`);
       setCustomers(response.data);
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -65,7 +67,8 @@ function StaffDashboard({ user, systemSettings }) {
 
   const fetchActiveLoans = async () => {
     try {
-      const response = await axios.get('http://localhost:9000/loans/active');
+      const base = getApiBase();
+      const response = await axios.get(`${base}/loans/active`);
       setActiveLoans(response.data);
     } catch (error) {
       console.error('Error fetching loans:', error);
@@ -75,7 +78,8 @@ function StaffDashboard({ user, systemSettings }) {
   const fetchCollectionReports = async () => {
     setLoadingReports(true);
     try {
-      const response = await axios.get('http://localhost:9000/reports/collections');
+      const base = getApiBase();
+      const response = await axios.get(`${base}/reports/collections`);
       setCollectionReports(response.data);
     } catch (error) {
       console.error('Error fetching collection reports:', error);
@@ -86,7 +90,8 @@ function StaffDashboard({ user, systemSettings }) {
 
   const fetchPendingCollections = async () => {
     try {
-      const response = await axios.get('http://localhost:9000/reports/pending-collections');
+      const base = getApiBase();
+      const response = await axios.get(`${base}/reports/pending-collections`);
       setPendingCollections(response.data);
     } catch (error) {
       console.error('Error fetching pending collections:', error);
@@ -104,23 +109,14 @@ function StaffDashboard({ user, systemSettings }) {
         setPasswordMsg({ type: 'error', text: 'பயனர் விவரங்கள் காணப்படவில்லை (User details not found)' });
         return;
       }
-      const bases = ['http://127.0.0.1:9000', 'http://localhost:9000'];
-      let lastErr, resp;
-      for (const base of bases) {
-        try {
-          resp = await axios.post(`${base}/change-password`, null, {
-            params: {
-              user_id: user.id,
-              old_password: passwordData.old,
-              new_password: passwordData.new
-            }
-          });
-          break;
-        } catch (err) {
-          lastErr = err;
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/change-password`, null, {
+        params: {
+          user_id: user.id,
+          old_password: passwordData.old,
+          new_password: passwordData.new
         }
-      }
-      if (!resp) throw lastErr || new Error('Password change failed');
+      });
       setPasswordMsg({ type: 'success', text: 'கடவுச்சொல் வெற்றிகரமாக மாற்றப்பட்டது (Password updated successfully)' });
       setPasswordData({ old: '', new: '', confirm: '' });
       setTimeout(() => setShowChangePassword(false), 2000);
@@ -484,7 +480,8 @@ function StaffDashboard({ user, systemSettings }) {
 
   const fetchRejectedLoans = async () => {
     try {
-      const response = await axios.get('http://localhost:9000/loans/rejected');
+      const base = getApiBase();
+      const response = await axios.get(`${base}/loans/rejected`);
       setRejectedLoans(response.data);
     } catch (error) {
       console.error('Error fetching rejected loans:', error);
@@ -493,7 +490,8 @@ function StaffDashboard({ user, systemSettings }) {
 
   const fetchAgents = async () => {
     try {
-      const response = await axios.get('http://localhost:9000/users/agents');
+      const base = getApiBase();
+      const response = await axios.get(`${base}/users/agents`);
       setAgents(response.data);
     } catch (error) {
       console.error('Error fetching agents:', error);
@@ -502,7 +500,8 @@ function StaffDashboard({ user, systemSettings }) {
 
   const handleAssignAgent = async (loanId, agentId) => {
     try {
-      await axios.post(`http://localhost:9000/loans/${loanId}/assign-agent/${agentId}`);
+      const base = getApiBase();
+      await axios.post(`${base}/loans/${loanId}/assign-agent/${agentId}`);
       setMessage({ type: 'success', text: 'Agent assigned successfully!' });
       fetchActiveLoans();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -514,7 +513,8 @@ function StaffDashboard({ user, systemSettings }) {
 
   const handleCloseLoan = async (loanId) => {
     try {
-      const response = await axios.get(`http://localhost:9000/loans/${loanId}/balance`);
+      const base = getApiBase();
+      const response = await axios.get(`${base}/loans/${loanId}/balance`);
       setClosingBalance(response.data.balance);
       setClosingLoanId(loanId);
       setIsClosing(true);
@@ -529,7 +529,8 @@ function StaffDashboard({ user, systemSettings }) {
       return;
     }
     try {
-      await axios.post(`http://localhost:9000/loans/${closingLoanId}/close`);
+      const base = getApiBase();
+      await axios.post(`${base}/loans/${closingLoanId}/close`);
       setMessage({ type: 'success', text: 'Loan closed successfully! (கடன் வெற்றிகரமாக முடிக்கப்பட்டது)' });
       setIsClosing(false);
       setClosingLoanId(null);
@@ -992,7 +993,10 @@ function StaffDashboard({ user, systemSettings }) {
                                   ))}
                                 </select>
                                 <button 
-                                  onClick={() => window.open(`http://localhost:9000/loans/${loan.id}/sanction`)}
+                                  onClick={() => {
+                                    const base = getApiBase();
+                                    window.open(`${base}/loans/${loan.id}/sanction`);
+                                  }}
                                   style={{ padding: '0.5rem', fontSize: '0.75rem', backgroundColor: '#3b82f6', width: 'auto' }}
                                   title="Download Sanction Letter"
                                 >
@@ -1246,7 +1250,10 @@ function StaffDashboard({ user, systemSettings }) {
                             <td style={{ padding: '0.75rem' }}>{coll.agent_name}</td>
                             <td style={{ padding: '0.75rem' }}>
                               <button 
-                                onClick={() => window.open(`http://localhost:9000/transactions/${coll.id}/receipt`)}
+                                onClick={() => {
+                                  const base = getApiBase();
+                                  window.open(`${base}/transactions/${coll.id}/receipt`);
+                                }}
                                 style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', backgroundColor: '#10b981', width: 'auto' }}
                                 title="Download Receipt"
                               >

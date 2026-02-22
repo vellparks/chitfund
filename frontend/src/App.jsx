@@ -7,6 +7,7 @@ import AgentDashboard from './AgentDashboard'
 import CustomerDashboard from './CustomerDashboard'
 import DeveloperDashboard from './DeveloperDashboard'
 import axios from 'axios'
+import { getApiBase } from './backendConfig'
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -173,29 +174,13 @@ function App() {
   }
 
   const BACKEND_TIMEOUT_MS = 7000;
-  const API_BASES = [
-    'https://chitfund-backend-hk37.onrender.com',
-    'http://127.0.0.1:9000',
-    'http://localhost:9000'
-  ];
 
   async function fetchSystemSettings() {
     try {
-      let response;
-      let lastError = null;
-      for (const base of API_BASES) {
-        try {
-          response = await axios.get(`${base}/settings`, {
-            timeout: BACKEND_TIMEOUT_MS
-          });
-          break;
-        } catch (err) {
-          lastError = err;
-        }
-      }
-      if (!response) {
-        throw lastError || new Error('Unable to reach backend');
-      }
+      const base = getApiBase();
+      const response = await axios.get(`${base}/settings`, {
+        timeout: BACKEND_TIMEOUT_MS
+      });
       if (response.data) {
         const s = response.data || {};
         let sanitized = {

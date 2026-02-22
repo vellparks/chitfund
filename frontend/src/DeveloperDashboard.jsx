@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getApiBase, getBackendMode, setBackendMode, BACKEND_MODES } from './backendConfig';
 
 function DeveloperDashboard({ user, systemSettings }) {
   const [backendStatus, setBackendStatus] = useState({ ok: false, error: null });
@@ -18,25 +19,14 @@ function DeveloperDashboard({ user, systemSettings }) {
   const [updateStatus, setUpdateStatus] = useState({ loading: false, message: null, error: null });
   const [offlineFile, setOfflineFile] = useState(null);
   const [offlineStatus, setOfflineStatus] = useState({ loading: false, message: null, error: null });
+  const [backendMode, setBackendModeState] = useState(getBackendMode());
   const BACKEND_TIMEOUT_MS = 7000;
 
   useEffect(() => {
     async function checkBackend() {
       try {
-        let resp;
-        const bases = ['https://chitfund-backend-hk37.onrender.com', 'http://127.0.0.1:9000', 'http://localhost:9000'];
-        let lastError = null;
-        for (const base of bases) {
-          try {
-            resp = await axios.get(`${base}/settings`, { timeout: BACKEND_TIMEOUT_MS });
-            break;
-          } catch (e) {
-            lastError = e;
-          }
-        }
-        if (!resp) {
-          throw lastError || new Error('Backend not reachable');
-        }
+        const base = getApiBase();
+        const resp = await axios.get(`${base}/settings`, { timeout: BACKEND_TIMEOUT_MS });
         if (resp.data) {
           setBackendStatus({ ok: true, error: null });
         } else {
@@ -49,12 +39,8 @@ function DeveloperDashboard({ user, systemSettings }) {
     checkBackend();
     async function fetchProductCode() {
       try {
-        let resp;
-        try {
-          resp = await axios.get('http://127.0.0.1:9000/license/product', { timeout: BACKEND_TIMEOUT_MS });
-        } catch (err1) {
-          resp = await axios.get('http://localhost:9000/license/product', { timeout: BACKEND_TIMEOUT_MS });
-        }
+        const base = getApiBase();
+        const resp = await axios.get(`${base}/license/product`, { timeout: BACKEND_TIMEOUT_MS });
         if (resp.data && resp.data.product_code) {
           setProductCode(resp.data.product_code);
         }
@@ -66,12 +52,8 @@ function DeveloperDashboard({ user, systemSettings }) {
     async function fetchDiagnostics() {
       setDiag((prev) => ({ ...prev, loading: true, error: null }));
       try {
-        let resp;
-        try {
-          resp = await axios.get('http://127.0.0.1:9000/diagnostics/summary', { timeout: BACKEND_TIMEOUT_MS });
-        } catch (err1) {
-          resp = await axios.get('http://localhost:9000/diagnostics/summary', { timeout: BACKEND_TIMEOUT_MS });
-        }
+        const base = getApiBase();
+        const resp = await axios.get(`${base}/diagnostics/summary`, { timeout: BACKEND_TIMEOUT_MS });
         setDiag({ loading: false, data: resp.data || null, error: null });
       } catch (error) {
         setDiag({ loading: false, data: null, error: error.message || String(error) });
@@ -146,13 +128,24 @@ function DeveloperDashboard({ user, systemSettings }) {
 
   async function handleCheckDb() {
     try {
-      const resp = await axios.get('http://127.0.0.1:9000/check-db').catch(() => axios.get('http://localhost:9000/check-db'));
+      const base = getApiBase();
+      const resp = await axios.get(`${base}/check-db`);
       const data = resp.data || {};
       const users = Array.isArray(data.users) ? data.users.length : 0;
       const customers = Array.isArray(data.customers) ? data.customers.length : 0;
       setDbStatus({ ok: true, users, customers, error: null });
     } catch (error) {
       setDbStatus({ ok: false, users: 0, customers: 0, error: error.message || String(error) });
+    }
+  }
+
+  function handleBackendModeChange(mode) {
+    setBackendMode(mode);
+    setBackendModeState(mode);
+    try {
+      handleCheckBackend();
+      handleCheckDb();
+    } catch {
     }
   }
 
@@ -165,9 +158,8 @@ function DeveloperDashboard({ user, systemSettings }) {
     }
     setUpdateStatus({ loading: true, message: null, error: null });
     try {
-      const resp = await axios
-        .post('http://127.0.0.1:9000/maintenance/update-app')
-        .catch(() => axios.post('http://localhost:9000/maintenance/update-app'));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/maintenance/update-app`);
       const data = resp.data || {};
       if (data.ok) {
         setUpdateStatus({
@@ -221,15 +213,10 @@ function DeveloperDashboard({ user, systemSettings }) {
     try {
       const formData = new FormData();
       formData.append('file', offlineFile);
-      const resp = await axios
-        .post('http://127.0.0.1:9000/maintenance/offline-update', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        .catch(() =>
-          axios.post('http://localhost:9000/maintenance/offline-update', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          })
-        );
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/maintenance/offline-update`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       const data = resp.data || {};
       if (data.ok) {
         setOfflineStatus({
@@ -255,9 +242,8 @@ function DeveloperDashboard({ user, systemSettings }) {
 
   async function handleEnsureUsers() {
     try {
-      const resp = await axios
-        .get('http://127.0.0.1:9000/init-db')
-        .catch(() => axios.get('http://localhost:9000/init-db'));
+      const base = getApiBase();
+      const resp = await axios.get(`${base}/init-db`);
       const msg = resp.data?.message || 'Admin / Developer users ensured';
       setEnsureStatus({ message: msg, error: null });
       await handleCheckDb();
@@ -269,18 +255,16 @@ function DeveloperDashboard({ user, systemSettings }) {
   async function handleRepairDb() {
     try {
       setRepairStatus({ message: 'Attempting database repair / recreate...', error: null });
-      const resp = await axios
-        .post('http://127.0.0.1:9000/diagnostics/repair-db')
-        .catch(() => axios.post('http://localhost:9000/diagnostics/repair-db'));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/diagnostics/repair-db`);
       const data = resp.data || {};
       const msg = data.message || 'Database repair completed';
       setRepairStatus({ message: msg, error: null });
       await handleCheckDb();
       await handleCheckBackend();
       try {
-        const diagResp = await axios
-          .get('http://127.0.0.1:9000/diagnostics/summary')
-          .catch(() => axios.get('http://localhost:9000/diagnostics/summary'));
+        const baseDiag = getApiBase();
+        const diagResp = await axios.get(`${baseDiag}/diagnostics/summary`);
         setDiag({ loading: false, data: diagResp.data || null, error: null });
       } catch (e) {
         setDiag((prev) => ({ ...prev, error: e.message || String(e) }));
@@ -302,9 +286,8 @@ function DeveloperDashboard({ user, systemSettings }) {
     try {
       setSampleStatus({ message: 'Creating sample data...', error: null });
       const payload = { count };
-      const resp = await axios
-        .post('http://127.0.0.1:9000/sample-data/generate', payload)
-        .catch(() => axios.post('http://localhost:9000/sample-data/generate', payload));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/sample-data/generate`, payload);
       const data = resp.data || {};
       const msg = data.message || `Sample data created (customers: ${data.customers_created ?? '-'}, loans: ${data.loans_created ?? '-'})`;
       setSampleStatus({ message: msg, error: null });
@@ -320,9 +303,8 @@ function DeveloperDashboard({ user, systemSettings }) {
     }
     try {
       setSampleStatus({ message: 'Clearing sample data...', error: null });
-      const resp = await axios
-        .post('http://127.0.0.1:9000/sample-data/clear')
-        .catch(() => axios.post('http://localhost:9000/sample-data/clear'));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/sample-data/clear`);
       const data = resp.data || {};
       const msg = data.message || 'Sample data cleared';
       setSampleStatus({ message: msg, error: null });
@@ -339,9 +321,8 @@ function DeveloperDashboard({ user, systemSettings }) {
     }
     try {
       setFreshStatus({ message: 'Clearing all test/business data...', error: null });
-      const resp = await axios
-        .post('http://127.0.0.1:9000/maintenance/fresh-reset')
-        .catch(() => axios.post('http://localhost:9000/maintenance/fresh-reset'));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/maintenance/fresh-reset`);
       const data = resp.data || {};
       const msg = data.message || 'All test/business data cleared.';
       setFreshStatus({ message: msg, error: null });
@@ -375,9 +356,8 @@ function DeveloperDashboard({ user, systemSettings }) {
       return;
     }
     try {
-      const resp = await axios
-        .post('http://127.0.0.1:9000/license/activate', { license_key: trimmed })
-        .catch(() => axios.post('http://localhost:9000/license/activate', { license_key: trimmed }));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/license/activate`, { license_key: trimmed });
       const data = resp.data || {};
       const key = data.license_key || trimmed;
       const masked = key.length > 4 ? key.slice(0, 4) + '-XXXX-XXXX-' + key.slice(-4) : key;
@@ -414,9 +394,8 @@ function DeveloperDashboard({ user, systemSettings }) {
       return;
     }
     try {
-      const resp = await axios
-        .post('http://127.0.0.1:9000/license/deactivate')
-        .catch(() => axios.post('http://localhost:9000/license/deactivate'));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/license/deactivate`);
       const data = resp.data || {};
       setLicenseKey('');
       setLicenseStatus({
@@ -449,9 +428,8 @@ function DeveloperDashboard({ user, systemSettings }) {
         trial_start_date: today,
         trial_days: days
       };
-      const resp = await axios
-        .post('http://127.0.0.1:9000/settings/trial', payload)
-        .catch(() => axios.post('http://localhost:9000/settings/trial', payload));
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/settings/trial`, payload);
       const data = resp.data || {};
       const start = data.trial_start_date || today;
       const d = parseInt(data.trial_days || days, 10);
@@ -512,10 +490,45 @@ function DeveloperDashboard({ user, systemSettings }) {
       </div>
 
       <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Backend Status</h2>
-        <p style={{ marginBottom: '0.75rem' }}>
-          Current backend URL checks: <code>http://127.0.0.1:9000/settings</code> → fallback to <code>http://localhost:9000/settings</code>
+        <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Backend Status & Mode</h2>
+        <p style={{ marginBottom: '0.75rem', color: '#4b5563' }}>
+          இங்கு Cloud / Local backend mode select பண்ணலாம். எல்லா screen / mobile app இதையே use பண்ணும்.
         </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <button
+            type="button"
+            onClick={() => handleBackendModeChange(BACKEND_MODES.CLOUD)}
+            style={{
+              width: 'auto',
+              padding: '0.4rem 0.9rem',
+              borderRadius: '999px',
+              border: backendMode === BACKEND_MODES.CLOUD ? '2px solid #2563eb' : '1px solid #d1d5db',
+              backgroundColor: backendMode === BACKEND_MODES.CLOUD ? '#2563eb' : '#f9fafb',
+              color: backendMode === BACKEND_MODES.CLOUD ? '#ffffff' : '#111827',
+              fontSize: '0.85rem'
+            }}
+          >
+            Cloud Mode (Internet)
+          </button>
+          <button
+            type="button"
+            onClick={() => handleBackendModeChange(BACKEND_MODES.LOCAL)}
+            style={{
+              width: 'auto',
+              padding: '0.4rem 0.9rem',
+              borderRadius: '999px',
+              border: backendMode === BACKEND_MODES.LOCAL ? '2px solid #059669' : '1px solid #d1d5db',
+              backgroundColor: backendMode === BACKEND_MODES.LOCAL ? '#059669' : '#f9fafb',
+              color: backendMode === BACKEND_MODES.LOCAL ? '#ffffff' : '#111827',
+              fontSize: '0.85rem'
+            }}
+          >
+            Local Mode (Offline / Office PC)
+          </button>
+          <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+            Current: <strong>{backendMode === BACKEND_MODES.LOCAL ? 'LOCAL BACKEND' : 'CLOUD BACKEND'}</strong>
+          </span>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
           <button style={{ width: 'auto' }} onClick={handleCheckBackend}>
             Check Backend Now

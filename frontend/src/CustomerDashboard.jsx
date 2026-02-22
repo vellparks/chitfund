@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 function CustomerDashboard({ user, systemSettings }) {
-  const apiBases = ['http://127.0.0.1:9000', 'http://localhost:9000'];
   const apiGet = async (path) => {
-    let lastErr;
-    for (const base of apiBases) {
-      try {
-        return await axios.get(`${base}${path}`);
-      } catch (err) {
-        lastErr = err;
-      }
-    }
-    throw lastErr || new Error('GET failed');
+    const base = getApiBase();
+    return axios.get(`${base}${path}`);
   };
   const [loans, setLoans] = useState([]);
   const [selectedLoan, setSelectedLoan] = useState(null);
@@ -310,7 +303,10 @@ function CustomerDashboard({ user, systemSettings }) {
 
               {(selectedLoan.status === 'active' || selectedLoan.status === 'closed') && (
                 <button 
-                  onClick={() => window.open(`http://localhost:9000/loans/${selectedLoan.id}/sanction`)}
+                  onClick={() => {
+                    const base = getApiBase();
+                    window.open(`${base}/loans/${selectedLoan.id}/sanction`);
+                  }}
                   className="btn-primary"
                   style={{ marginTop: '1.5rem', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
@@ -356,7 +352,10 @@ function CustomerDashboard({ user, systemSettings }) {
                       <td style={{ padding: '0.75rem' }}><span style={{ color: '#10b981' }}>● Paid</span></td>
                       <td style={{ padding: '0.75rem' }}>
                         <button 
-                          onClick={() => window.open(`http://localhost:9000/transactions/${tx.id}/receipt`)}
+                          onClick={() => {
+                            const base = getApiBase();
+                            window.open(`${base}/transactions/${tx.id}/receipt`);
+                          }}
                           style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', backgroundColor: '#10b981', width: 'auto' }}
                           title="Download Receipt"
                         >

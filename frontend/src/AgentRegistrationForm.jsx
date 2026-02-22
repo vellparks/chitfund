@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 
 function AgentRegistrationForm({ onComplete, initialData, onCancel }) {
   const isEdit = !!initialData;
@@ -36,6 +37,15 @@ function AgentRegistrationForm({ onComplete, initialData, onCancel }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
+
+  const apiPost = async (path, data) => {
+    const base = getApiBase();
+    return axios.post(`${base}${path}`, data);
+  };
+  const apiPut = async (path, data) => {
+    const base = getApiBase();
+    return axios.put(`${base}${path}`, data);
+  };
 
   const sanitizePhoneInput = (v) => (v || '').replace(/\D/g, '').slice(0, 10);
   const sanitizeAadhaarInput = (v) => (v || '').replace(/\D/g, '').slice(0, 12);
@@ -148,10 +158,10 @@ function AgentRegistrationForm({ onComplete, initialData, onCancel }) {
         pan_no: (formData.pan_no || '').toUpperCase().trim()
       };
       if (isEdit) {
-        await axios.put(`http://localhost:9000/users/${initialData.id}`, payload);
+        await apiPut(`/users/${initialData.id}`, payload);
         setMessage({ type: 'success', text: 'Agent updated successfully! (முகவர் விவரங்கள் புதுப்பிக்கப்பட்டது)' });
       } else {
-        await axios.post('http://localhost:9000/users/', payload);
+        await apiPost('/users/', payload);
         setMessage({ type: 'success', text: 'Agent registered successfully with KYC details!' });
       }
       

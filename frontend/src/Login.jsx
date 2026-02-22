@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 
 function Login({ onLogin, systemSettings, trialActive, trialRemainingDays, trialExpiry }) {
   const [username, setUsername] = useState('');
@@ -8,7 +9,6 @@ function Login({ onLogin, systemSettings, trialActive, trialRemainingDays, trial
   const [error, setError] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [devMode, setDevMode] = useState(false);
-  const apiBases = ['https://chitfund-backend-hk37.onrender.com', 'http://127.0.0.1:9000', 'http://localhost:9000'];
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -34,17 +34,8 @@ function Login({ onLogin, systemSettings, trialActive, trialRemainingDays, trial
     setError('');
     try {
       console.log(`Attempting login: username=${username}, role=${role}`);
-      let lastErr;
-      let response;
-      for (const base of apiBases) {
-        try {
-          response = await axios.post(`${base}/login?username=${username}&role=${role}&password=${password}`);
-          break;
-        } catch (err) {
-          lastErr = err;
-        }
-      }
-      if (!response) throw lastErr || new Error('Login failed');
+      const base = getApiBase();
+      const response = await axios.post(`${base}/login?username=${username}&role=${role}&password=${password}`);
       console.log('Login response:', response.data);
       onLogin(response.data);
     } catch (err) {

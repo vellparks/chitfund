@@ -1,36 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 function AgentDashboard({ user, systemSettings }) {
-  const apiBases = ['https://chitfund-backend-hk37.onrender.com', 'http://127.0.0.1:9000', 'http://localhost:9000'];
   const apiGet = async (path) => {
-    let lastErr;
-    for (const base of apiBases) {
-      try {
-        return await axios.get(`${base}${path}`);
-      } catch (err) {
-        lastErr = err;
-      }
-    }
-    throw lastErr || new Error('GET failed');
+    const base = getApiBase();
+    return axios.get(`${base}${path}`);
   };
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordData, setPasswordData] = useState({ old: '', new: '', confirm: '' });
   const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
   const [passwordVisibility, setPasswordVisibility] = useState({ old: false, new: false, confirm: false });
   const apiPost = async (path, data) => {
-    let lastErr;
-    for (const base of apiBases) {
-      try {
-        return await axios.post(`${base}${path}`, data);
-      } catch (err) {
-        lastErr = err;
-      }
-    }
-    throw lastErr || new Error('POST failed');
+    const base = getApiBase();
+    return axios.post(`${base}${path}`, data);
   };
   const [activeLoans, setActiveLoans] = useState([]);
   const [selectedLoan, setSelectedLoan] = useState(null);
@@ -316,22 +302,14 @@ function AgentDashboard({ user, systemSettings }) {
         setPasswordMsg({ type: 'error', text: 'பயனர் விவரங்கள் காணப்படவில்லை (User details not found)' });
         return;
       }
-      let lastErr, resp;
-      for (const base of apiBases) {
-        try {
-          resp = await axios.post(`${base}/change-password`, null, {
-            params: {
-              user_id: user.id,
-              old_password: passwordData.old,
-              new_password: passwordData.new
-            }
-          });
-          break;
-        } catch (err) {
-          lastErr = err;
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/change-password`, null, {
+        params: {
+          user_id: user.id,
+          old_password: passwordData.old,
+          new_password: passwordData.new
         }
-      }
-      if (!resp) throw lastErr || new Error('Password change failed');
+      });
       setPasswordMsg({ type: 'success', text: 'கடவுச்சொல் வெற்றிகரமாக மாற்றப்பட்டது (Password updated successfully)' });
       setPasswordData({ old: '', new: '', confirm: '' });
       setTimeout(() => setShowChangePassword(false), 2000);
@@ -550,7 +528,10 @@ function AgentDashboard({ user, systemSettings }) {
                               {isCollectedToday ? 'Collect Again' : 'Collect'}
                             </button>
                             <button 
-                              onClick={() => window.open(`http://127.0.0.1:9000/loans/${loan.id}/sanction`)}
+                              onClick={() => {
+                                const base = getApiBase();
+                                window.open(`${base}/loans/${loan.id}/sanction`);
+                              }}
                               style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', backgroundColor: '#3b82f6', width: 'auto' }}
                               title="Download Sanction Letter"
                             >
@@ -773,7 +754,10 @@ function AgentDashboard({ user, systemSettings }) {
                     <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold' }}>₹ {(coll.amount || 0).toLocaleString()}</td>
                     <td style={{ padding: '0.75rem' }}>
                       <button 
-                        onClick={() => window.open(`http://localhost:9000/transactions/${coll.id}/receipt`)}
+                        onClick={() => {
+                          const base = getApiBase();
+                          window.open(`${base}/transactions/${coll.id}/receipt`);
+                        }}
                         style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', backgroundColor: '#10b981', width: 'auto' }}
                         title="Download Receipt"
                       >

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 import LoanForm from './LoanForm';
 import AgentRegistrationForm from './AgentRegistrationForm';
 import CustomerRegistrationForm from './CustomerRegistrationForm';
@@ -165,34 +166,20 @@ function AdminDashboard({ user, onThemeChange, onSettingsUpdate, systemSettings:
     } catch (e) { e; }
   }, []);
 
-  const apiBases = ['https://chitfund-backend-hk37.onrender.com', 'http://127.0.0.1:9000', 'http://localhost:9000'];
   const apiGet = async (path) => {
-    let lastErr;
-    for (const base of apiBases) {
-      try {
-        return await axios.get(`${base}${path}`);
-      } catch (err) {
-        lastErr = err;
-      }
-    }
-    throw lastErr || new Error('API GET failed');
+    const base = getApiBase();
+    return axios.get(`${base}${path}`);
   };
   const apiPost = async (path, data) => {
-    let lastErr;
-    for (const base of apiBases) {
-      try {
-        return await axios.post(`${base}${path}`, data);
-      } catch (err) {
-        lastErr = err;
-      }
-    }
-    throw lastErr || new Error('API POST failed');
+    const base = getApiBase();
+    return axios.post(`${base}${path}`, data);
   };
 
   const sendBulkReminders = async () => {
     if (selectedOverdue.length === 0) return;
     try {
-      const response = await axios.post('http://localhost:9000/loans/send-reminders', selectedOverdue);
+      const base = getApiBase();
+      const response = await axios.post(`${base}/loans/send-reminders`, selectedOverdue);
       setReminderMsg({ text: response.data.message, type: 'success' });
       setSelectedOverdue([]);
       setTimeout(() => setReminderMsg({ text: '', type: '' }), 3000);
@@ -224,7 +211,8 @@ function AdminDashboard({ user, onThemeChange, onSettingsUpdate, systemSettings:
 
   const fetchCommissionReport = async () => {
     try {
-      const response = await axios.get('http://localhost:9000/loans/commission-report');
+      const base = getApiBase();
+      const response = await axios.get(`${base}/loans/commission-report`);
       setCommissionReport(response.data);
     } catch (error) {
       console.error('Error fetching commission report:', error);
@@ -242,23 +230,14 @@ function AdminDashboard({ user, onThemeChange, onSettingsUpdate, systemSettings:
         setPasswordMsg({ type: 'error', text: 'பயனர் விவரங்கள் காணப்படவில்லை (User details not found)' });
         return;
       }
-      const bases = ['http://127.0.0.1:9000', 'http://localhost:9000'];
-      let lastErr, resp;
-      for (const base of bases) {
-        try {
-          resp = await axios.post(`${base}/change-password`, null, {
-            params: {
-              user_id: user.id,
-              old_password: passwordData.old,
-              new_password: passwordData.new
-            }
-          });
-          break;
-        } catch (err) {
-          lastErr = err;
+      const base = getApiBase();
+      const resp = await axios.post(`${base}/change-password`, null, {
+        params: {
+          user_id: user.id,
+          old_password: passwordData.old,
+          new_password: passwordData.new
         }
-      }
-      if (!resp) throw lastErr || new Error('Password change failed');
+      });
       setPasswordMsg({ type: 'success', text: 'கடவுச்சொல் வெற்றிகரமாக மாற்றப்பட்டது (Password updated successfully)' });
       setPasswordData({ old: '', new: '', confirm: '' });
       setTimeout(() => setShowChangePassword(false), 2000);
@@ -1178,10 +1157,9 @@ function AdminDashboard({ user, onThemeChange, onSettingsUpdate, systemSettings:
         agent_id: editingLoanData.agent_id ? parseInt(editingLoanData.agent_id) : null
       };
 
-      // 1. Update loan details
-      await axios.put(`http://localhost:9000/loans/${loanId}`, payload);
-      // 2. Approve loan
-      await axios.post(`http://localhost:9000/loans/${loanId}/approve`);
+      const base = getApiBase();
+      await axios.put(`${base}/loans/${loanId}`, payload);
+      await axios.post(`${base}/loans/${loanId}/approve`);
       
       setEditingLoanId(null);
       fetchPendingLoans();
@@ -3169,7 +3147,10 @@ function AdminDashboard({ user, onThemeChange, onSettingsUpdate, systemSettings:
                           <td style={{ padding: '0.75rem' }}>{coll.agent_name}</td>
                           <td style={{ padding: '0.75rem' }}>
                             <button 
-                              onClick={() => window.open(`http://localhost:9000/transactions/${coll.id}/receipt`)}
+                              onClick={() => {
+                                const base = getApiBase();
+                                window.open(`${base}/transactions/${coll.id}/receipt`);
+                              }}
                               style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', backgroundColor: '#10b981', width: 'auto' }}
                               title="Download Receipt"
                             >
@@ -3370,7 +3351,10 @@ function AdminDashboard({ user, onThemeChange, onSettingsUpdate, systemSettings:
                           <td style={{ padding: '0.75rem' }}>
                             {(loan.status === 'active' || loan.status === 'closed') && (
                               <button 
-                                onClick={() => window.open(`http://localhost:9000/loans/${loan.id}/sanction`)}
+                                onClick={() => {
+                                  const base = getApiBase();
+                                  window.open(`${base}/loans/${loan.id}/sanction`);
+                                }}
                                 style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', backgroundColor: '#3b82f6', width: 'auto', marginRight: '0.3rem' }}
                                 title="Download Sanction Letter"
                               >

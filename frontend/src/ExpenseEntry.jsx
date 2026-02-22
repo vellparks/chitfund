@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBase } from './backendConfig';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -16,6 +17,19 @@ function ExpenseEntry({ user: propUser, userRole, systemSettings }) {
     date: new Date().toISOString().split('T')[0]
   });
   const [msg, setMsg] = useState({ type: '', text: '' });
+
+  const apiGet = async (path) => {
+    const base = getApiBase();
+    return axios.get(`${base}${path}`);
+  };
+  const apiPost = async (path, data) => {
+    const base = getApiBase();
+    return axios.post(`${base}${path}`, data);
+  };
+  const apiDelete = async (path) => {
+    const base = getApiBase();
+    return axios.delete(`${base}${path}`);
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -197,7 +211,7 @@ function ExpenseEntry({ user: propUser, userRole, systemSettings }) {
   const fetchExpenses = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/expenses');
+      const response = await apiGet('/expenses');
       setExpenses(response.data);
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -262,7 +276,7 @@ function ExpenseEntry({ user: propUser, userRole, systemSettings }) {
         }
       }
 
-      await axios.post('/expenses', {
+      const response = await apiPost('/expenses', {
         description: finalDescription,
         amount: amountValue,
         date: formattedDate,
@@ -297,7 +311,7 @@ function ExpenseEntry({ user: propUser, userRole, systemSettings }) {
   const handleDelete = async (id) => {
     if (!window.confirm('இந்த செலவை நீக்க விரும்புகிறீர்களா? (Delete this expense?)')) return;
     try {
-      await axios.delete(`/expenses/${id}`);
+      await apiDelete(`/expenses/${id}`);
       fetchExpenses();
     } catch (error) {
       alert('Error deleting expense');

@@ -8,7 +8,7 @@ function Login({ onLogin, systemSettings, trialActive, trialRemainingDays, trial
   const [error, setError] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [devMode, setDevMode] = useState(false);
-  const apiBases = ['http://127.0.0.1:9000', 'http://localhost:9000'];
+  const apiBases = ['https://chitfund-backend-hk37.onrender.com', 'http://127.0.0.1:9000', 'http://localhost:9000'];
 
   useEffect(() => {
     const handleKeyDown = (e) => {

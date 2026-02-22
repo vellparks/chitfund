@@ -173,14 +173,28 @@ function App() {
   }
 
   const BACKEND_TIMEOUT_MS = 7000;
+  const API_BASES = [
+    'https://chitfund-backend-hk37.onrender.com',
+    'http://127.0.0.1:9000',
+    'http://localhost:9000'
+  ];
 
   async function fetchSystemSettings() {
     try {
       let response;
-      try {
-        response = await axios.get('http://127.0.0.1:9000/settings', { timeout: BACKEND_TIMEOUT_MS });
-      } catch (err1) {
-        response = await axios.get('http://localhost:9000/settings', { timeout: BACKEND_TIMEOUT_MS });
+      let lastError = null;
+      for (const base of API_BASES) {
+        try {
+          response = await axios.get(`${base}/settings`, {
+            timeout: BACKEND_TIMEOUT_MS
+          });
+          break;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      if (!response) {
+        throw lastError || new Error('Unable to reach backend');
       }
       if (response.data) {
         const s = response.data || {};
@@ -372,15 +386,10 @@ function App() {
               Server offline / app not running
             </h2>
             <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              இந்த கணினியில் backend server தற்போது ஓடவில்லை. அதனால் login / data load ஆகாது.
+              Cloud backend தற்போது பதில் அளிக்கவில்லை. சில விநாடிகள் கழித்து மீண்டும் முயற்சி செய்யவும்.
             </p>
-            <ol style={{ margin: '0.5rem 0 0.75rem 1.25rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              <li style={{ marginBottom: '0.25rem' }}>D:\\chit fund folder திறக்கவும்.</li>
-              <li style={{ marginBottom: '0.25rem' }}>அதற்குள் உள்ள <strong>start_servers.bat</strong> file மீது double‑click செய்யவும்.</li>
-              <li>இரண்டு black window open ஆன பிறகு, இந்த browser பக்கத்தை மீண்டும் refresh செய்யவும்.</li>
-            </ol>
             <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Backend expected URL: <code>http://127.0.0.1:9000</code> • Frontend: <code>http://localhost:5173</code>
+              Backend URL: <code>https://chitfund-backend-hk37.onrender.com</code>
             </p>
             <button
               type="button"

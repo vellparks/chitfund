@@ -1465,17 +1465,20 @@ def login(username: str, role: str, password: Optional[str] = None, db: Session 
             raise HTTPException(status_code=403, detail="Trial period expired. Contact developer for license.")
 
     if role == "customer":
-        customer = db.query(models.Customer).filter(models.Customer.phone == clean_username).first()
+        candidates = set()
+        candidates.add(clean_username)
+        try:
+            normalized = normalize_indian_phone(clean_username)
+            candidates.add(normalized)
+        except HTTPException:
+            pass
+        if clean_username.startswith('0'):
+            candidates.add(clean_username[1:])
+        else:
+            candidates.add('0' + clean_username)
+        customer = db.query(models.Customer).filter(models.Customer.phone.in_(list(candidates))).first()
         if not customer:
-            # Try searching without leading zero if it exists, or adding one
-            if clean_username.startswith('0'):
-                alt_username = clean_username[1:]
-            else:
-                alt_username = '0' + clean_username
-            customer = db.query(models.Customer).filter(models.Customer.phone == alt_username).first()
-            
-        if not customer:
-            print(f"Customer login failed: {clean_username} not found")
+            print(f"Customer login failed: {clean_username} not found (candidates={candidates})")
             raise HTTPException(status_code=401, detail="இந்த தொலைபேசி எண்ணில் வாடிக்கையாளர் இல்லை (Customer not found)")
         print(f"Customer login successful: {customer.name}")
         enforce_trial_and_license()

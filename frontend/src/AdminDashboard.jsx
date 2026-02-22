@@ -165,7 +165,7 @@ function AdminDashboard({ user, onThemeChange, onSettingsUpdate, systemSettings:
     } catch (e) { e; }
   }, []);
 
-  const apiBases = ['http://127.0.0.1:9000', 'http://localhost:9000'];
+  const apiBases = ['https://chitfund-backend-hk37.onrender.com', 'http://127.0.0.1:9000', 'http://localhost:9000'];
   const apiGet = async (path) => {
     let lastErr;
     for (const base of apiBases) {

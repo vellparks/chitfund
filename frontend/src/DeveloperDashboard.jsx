@@ -24,10 +24,18 @@ function DeveloperDashboard({ user, systemSettings }) {
     async function checkBackend() {
       try {
         let resp;
-        try {
-          resp = await axios.get('http://127.0.0.1:9000/settings', { timeout: BACKEND_TIMEOUT_MS });
-        } catch (err1) {
-          resp = await axios.get('http://localhost:9000/settings', { timeout: BACKEND_TIMEOUT_MS });
+        const bases = ['https://chitfund-backend-hk37.onrender.com', 'http://127.0.0.1:9000', 'http://localhost:9000'];
+        let lastError = null;
+        for (const base of bases) {
+          try {
+            resp = await axios.get(`${base}/settings`, { timeout: BACKEND_TIMEOUT_MS });
+            break;
+          } catch (e) {
+            lastError = e;
+          }
+        }
+        if (!resp) {
+          throw lastError || new Error('Backend not reachable');
         }
         if (resp.data) {
           setBackendStatus({ ok: true, error: null });
@@ -129,21 +137,10 @@ function DeveloperDashboard({ user, systemSettings }) {
     }
   }, [systemSettings]);
 
-  async function handleCheckBackend() {
+  async function handleCheckBackend(e) {
     try {
-      let resp;
-      try {
-        resp = await axios.get('http://127.0.0.1:9000/settings', { timeout: BACKEND_TIMEOUT_MS });
-      } catch (err1) {
-        resp = await axios.get('http://localhost:9000/settings', { timeout: BACKEND_TIMEOUT_MS });
-      }
-      if (resp.data) {
-        setBackendStatus({ ok: true, error: null });
-      } else {
-        setBackendStatus({ ok: false, error: 'Empty response' });
-      }
-    } catch (error) {
-      setBackendStatus({ ok: false, error: error.message || String(error) });
+      await checkBackend();
+    } catch {
     }
   }
 

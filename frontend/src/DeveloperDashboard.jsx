@@ -21,6 +21,7 @@ function DeveloperDashboard({ user, systemSettings }) {
   const [updateStatus, setUpdateStatus] = useState({ loading: false, message: null, error: null });
   const [offlineFile, setOfflineFile] = useState(null);
   const [offlineStatus, setOfflineStatus] = useState({ loading: false, message: null, error: null });
+  const [offlineScan, setOfflineScan] = useState({ loading: false, data: null, error: null });
   const [backendMode, setBackendModeState] = useState(getBackendMode());
   const [cloudFrontendUrl, setCloudFrontendUrl] = useState(
     systemSettings?.frontend_url || DEFAULT_CLOUD_FRONTEND_URL
@@ -165,6 +166,9 @@ function DeveloperDashboard({ user, systemSettings }) {
     setBackendModeState(mode);
     handleCheckBackend();
     handleCheckDb();
+    if (mode === BACKEND_MODES.LOCAL) {
+      handleOfflineScan();
+    }
   }
 
   async function handleUpdateApp() {
@@ -290,6 +294,21 @@ function DeveloperDashboard({ user, systemSettings }) {
     } catch (error) {
       setUrlStatus({
         message: null,
+        error: error.message || String(error)
+      });
+    }
+  }
+
+  async function handleOfflineScan() {
+    setOfflineScan({ loading: true, data: null, error: null });
+    try {
+      const base = getApiBase();
+      const resp = await axios.get(`${base}/maintenance/offline-scan`, { timeout: BACKEND_TIMEOUT_MS });
+      setOfflineScan({ loading: false, data: resp.data || null, error: null });
+    } catch (error) {
+      setOfflineScan({
+        loading: false,
+        data: null,
         error: error.message || String(error)
       });
     }
@@ -739,6 +758,59 @@ function DeveloperDashboard({ user, systemSettings }) {
                 </div>
               )}
             </form>
+          </div>
+
+          <div className="card" style={{ marginBottom: '1.5rem' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '0.75rem' }}>Offline App Folder Health (Local Mode Helper)</h2>
+            <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              Local Mode பயன்படுத்தும் போது இந்த பாதை{' '}
+              <code>{offlinePath || systemSettings?.offline_path || 'offline path not set'}</code>{' '}
+              உள்ளே backend / frontend / DB எல்லாம் இருக்கிறதா என்று quick check செய்ய இந்த section use பண்ணலாம்.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <button type="button" style={{ width: 'auto' }} onClick={handleOfflineScan}>
+                {offlineScan.loading ? 'Scanning offline folder…' : 'Re-check Offline Folder'}
+              </button>
+              {offlineScan.data && (
+                <span
+                  style={{
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '999px',
+                    fontSize: '0.8rem',
+                    backgroundColor: offlineScan.data.backend_ok && offlineScan.data.frontend_ok && offlineScan.data.db_ok
+                      ? '#dcfce7'
+                      : '#fee2e2',
+                    color: offlineScan.data.backend_ok && offlineScan.data.frontend_ok && offlineScan.data.db_ok
+                      ? '#166534'
+                      : '#991b1b'
+                  }}
+                >
+                  {offlineScan.data.message || 'Scan completed'}
+                </span>
+              )}
+            </div>
+            {offlineScan.error && (
+              <div
+                style={{
+                  marginTop: '0.25rem',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  backgroundColor: '#fee2e2',
+                  color: '#991b1b',
+                  fontSize: '0.85rem'
+                }}
+              >
+                Error scanning offline folder: {offlineScan.error}
+              </div>
+            )}
+            {offlineScan.data && (
+              <div style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                <div>Detected path: <code>{offlineScan.data.offline_path || '(none)'}</code></div>
+                <div>Backend folder OK: <strong>{offlineScan.data.backend_ok ? 'YES' : 'NO'}</strong></div>
+                <div>Frontend build OK: <strong>{offlineScan.data.frontend_ok ? 'YES' : 'NO'}</strong></div>
+                <div>DB files found: <strong>{(offlineScan.data.db_files || []).length}</strong></div>
+              </div>
+            )}
           </div>
 
           <div className="card" style={{ marginBottom: '1.5rem' }}>

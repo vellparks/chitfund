@@ -2504,6 +2504,69 @@ async def maintenance_offline_update(file: UploadFile = File(...)):
         except Exception:
             pass
 
+@app.get("/maintenance/offline-scan")
+def maintenance_offline_scan(db: Session = Depends(get_db)):
+    settings = get_settings(db)
+    base_path = settings.get("offline_path") or ""
+    base_path = (base_path or "").strip()
+    result = {
+        "offline_path": base_path,
+        "exists": False,
+        "backend_dir": None,
+        "backend_ok": False,
+        "frontend_dir": None,
+        "frontend_ok": False,
+        "db_files": [],
+        "db_ok": False,
+        "message": None,
+    }
+    if not base_path:
+        result["message"] = "Offline install path not configured."
+        return result
+    try:
+        if not os.path.isdir(base_path):
+            result["message"] = "Offline install folder not found."
+            return result
+        result["exists"] = True
+        backend_dir = os.path.join(base_path, "backend")
+        frontend_dir = os.path.join(base_path, "frontend")
+        result["backend_dir"] = backend_dir
+        result["frontend_dir"] = frontend_dir
+        if os.path.isdir(backend_dir):
+            exe_path = os.path.join(backend_dir, "SetLiveBackend.exe")
+            main_py = os.path.join(backend_dir, "main.py")
+            result["backend_ok"] = os.path.isfile(exe_path) or os.path.isfile(main_py)
+        if os.path.isdir(frontend_dir):
+            dist_index = os.path.join(frontend_dir, "dist", "index.html")
+            raw_index = os.path.join(frontend_dir, "index.html")
+            result["frontend_ok"] = os.path.isfile(dist_index) or os.path.isfile(raw_index)
+        db_candidates = []
+        try:
+            for root, dirs, files in os.walk(base_path):
+                for f in files:
+                    if f.lower().endswith(".db"):
+                        full = os.path.join(root, f)
+                        db_candidates.append(full)
+        except Exception:
+            db_candidates = []
+        result["db_files"] = db_candidates
+        result["db_ok"] = len(db_candidates) > 0
+        if result["backend_ok"] and result["frontend_ok"] and result["db_ok"]:
+            result["message"] = "Offline folder looks OK (backend, frontend, DB detected)."
+        else:
+            problems = []
+            if not result["backend_ok"]:
+                problems.append("backend executable not found")
+            if not result["frontend_ok"]:
+                problems.append("frontend build not found")
+            if not result["db_ok"]:
+                problems.append("no .db file found")
+            result["message"] = "Offline folder incomplete: " + ", ".join(problems)
+        return result
+    except Exception as e:
+        result["message"] = f"Error while scanning offline folder: {e}"
+        return result
+
 @app.post("/maintenance/fresh-reset")
 def maintenance_fresh_reset(db: Session = Depends(get_db)):
     tx_deleted = db.query(models.Transaction).delete(synchronize_session=False)

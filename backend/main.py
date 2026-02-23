@@ -194,6 +194,18 @@ def ensure_settings_columns():
                 conn.execute(text("ALTER TABLE system_settings ADD COLUMN trial_reset_count INTEGER DEFAULT 0"))
             except Exception:
                 pass
+            try:
+                conn.execute(text("ALTER TABLE system_settings ADD COLUMN frontend_url TEXT"))
+            except Exception:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE system_settings ADD COLUMN backend_url TEXT"))
+            except Exception:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE system_settings ADD COLUMN offline_path TEXT"))
+            except Exception:
+                pass
     except Exception:
         pass
 
@@ -230,37 +242,51 @@ def migrate_settings_table_if_needed():
                     license_valid_till TEXT,
                     trial_enabled INTEGER DEFAULT 0,
                     trial_start_date TEXT,
-                    trial_days INTEGER DEFAULT 0
+                    trial_days INTEGER DEFAULT 0,
+                    frontend_url TEXT,
+                    backend_url TEXT,
+                    offline_path TEXT
                 )
             """))
             # Try to copy from existing table if present
             try:
                 conn.execute(text("""
-                    INSERT INTO system_settings_new (id, app_name, company_name, company_address, company_phone, logo_base64,
+                    INSERT INTO system_settings_new (
+                        id, app_name, company_name, company_address, company_phone, logo_base64,
                         commission_enabled, commission_percent, auto_backup_enabled, auto_backup_frequency,
                         sms_provider, twilio_account_sid, twilio_auth_token, twilio_sms_from, twilio_whatsapp_from,
                         payment_enabled, payment_provider, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret,
-                        license_key, license_active, license_valid_till, trial_enabled, trial_start_date, trial_days)
-                    SELECT id, app_name, company_name, company_address, company_phone, logo_base64,
+                        license_key, license_active, license_valid_till, trial_enabled, trial_start_date, trial_days,
+                        frontend_url, backend_url, offline_path
+                    )
+                    SELECT
+                        id, app_name, company_name, company_address, company_phone, logo_base64,
                         commission_enabled, commission_percent, auto_backup_enabled, auto_backup_frequency,
                         sms_provider, twilio_account_sid, twilio_auth_token, twilio_sms_from, twilio_whatsapp_from,
                         payment_enabled, payment_provider, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret,
-                        license_key, license_active, license_valid_till, trial_enabled, trial_start_date, trial_days
+                        license_key, license_active, license_valid_till, trial_enabled, trial_start_date, trial_days,
+                        NULL AS frontend_url, NULL AS backend_url, NULL AS offline_path
                     FROM system_settings
                 """))
             except Exception:
                 # If old table not present, insert default row
                 conn.execute(text("""
-                    INSERT INTO system_settings_new (id, app_name, company_name, company_address, company_phone, logo_base64,
+                    INSERT INTO system_settings_new (
+                        id, app_name, company_name, company_address, company_phone, logo_base64,
                         commission_enabled, commission_percent, auto_backup_enabled, auto_backup_frequency,
                         sms_provider, twilio_account_sid, twilio_auth_token, twilio_sms_from, twilio_whatsapp_from,
                         payment_enabled, payment_provider, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret,
-                        license_key, license_active, license_valid_till, trial_enabled, trial_start_date, trial_days)
-                    VALUES (1, 'Finance Manager', '', '', '', NULL,
+                        license_key, license_active, license_valid_till, trial_enabled, trial_start_date, trial_days,
+                        frontend_url, backend_url, offline_path
+                    )
+                    VALUES (
+                        1, 'Finance Manager', '', '', '', NULL,
                         0, 0, 0, 'daily',
                         'twilio', NULL, NULL, NULL, NULL,
                         0, 'razorpay', NULL, NULL, NULL,
-                        NULL, 0, NULL, 0, NULL, 0)
+                        NULL, 0, NULL, 0, NULL, 0,
+                        NULL, NULL, NULL
+                    )
                 """))
             # Replace old table
             try:
@@ -1600,6 +1626,35 @@ def send_overdue_reminders(loan_ids: List[int], db: Session = Depends(get_db)):
             
     return {"message": f"{sent_count} நினைவூட்டல்கள் அனுப்பப்பட்டன.", "count": sent_count}
 
+@app.get("/notifications/app/{customer_id}")
+def get_app_notifications(customer_id: int, unread_only: bool = True, db: Session = Depends(get_db)):
+    query = db.query(models.AppNotification).filter(models.AppNotification.customer_id == customer_id)
+    if unread_only:
+        query = query.filter(models.AppNotification.is_read == False)
+    rows = query.order_by(models.AppNotification.created_at.desc()).all()
+    result = []
+    for n in rows:
+        result.append(
+            {
+                "id": n.id,
+                "customer_id": n.customer_id,
+                "message": n.message,
+                "created_at": n.created_at.isoformat() if n.created_at else None,
+                "is_read": bool(n.is_read),
+            }
+        )
+    return result
+
+@app.post("/notifications/app/{customer_id}/read-all")
+def read_all_app_notifications(customer_id: int, db: Session = Depends(get_db)):
+    updated = (
+        db.query(models.AppNotification)
+        .filter(models.AppNotification.customer_id == customer_id, models.AppNotification.is_read == False)
+        .update({"is_read": True})
+    )
+    db.commit()
+    return {"updated": updated}
+
 @app.get("/loans/agent/{agent_id}", response_model=List[schemas.Loan])
 def read_agent_loans(agent_id: int, db: Session = Depends(get_db)):
     return db.query(models.Loan).filter(
@@ -1965,6 +2020,7 @@ def get_settings(db: Session = Depends(get_db)):
             "commission_enabled","commission_percent","auto_backup_enabled","auto_backup_frequency",
             "sms_provider","twilio_account_sid","twilio_auth_token","twilio_sms_from","twilio_whatsapp_from",
             "payment_enabled","payment_provider","razorpay_key_id","razorpay_key_secret","razorpay_webhook_secret",
+            "frontend_url","backend_url","offline_path",
             "license_key","license_active","license_valid_till",
             "trial_enabled","trial_start_date","trial_days","trial_reset_count"
         ]
@@ -2002,6 +2058,9 @@ def get_settings(db: Session = Depends(get_db)):
             "razorpay_key_id": get_val("razorpay_key_id", None),
             "razorpay_key_secret": get_val("razorpay_key_secret", None),
             "razorpay_webhook_secret": get_val("razorpay_webhook_secret", None),
+            "frontend_url": get_val("frontend_url", None),
+            "backend_url": get_val("backend_url", None),
+            "offline_path": get_val("offline_path", None),
             "license_key": get_val("license_key", None),
             "license_active": int(get_val("license_active", 0)) == 1,
             "license_valid_till": get_val("license_valid_till", None),
@@ -2010,6 +2069,42 @@ def get_settings(db: Session = Depends(get_db)):
             "trial_days": int(get_val("trial_days", 0)) if get_val("trial_days", 0) is not None else 0,
             "trial_reset_count": int(get_val("trial_reset_count", 0) or 0)
         }
+        # Ensure sensible defaults for new URL / path fields
+        updated_fields = {}
+        # Default backend_url if empty: current deployed cloud backend
+        raw_backend = result.get("backend_url")
+        if not raw_backend or str(raw_backend).strip() == "":
+            default_backend = "https://chitfund-backend-hk37.onrender.com"
+            result["backend_url"] = default_backend
+            updated_fields["backend_url"] = default_backend
+        # Default offline_path if empty: derive from detected frontend/dist or ClientRuntime folder
+        raw_offline = result.get("offline_path")
+        if (not raw_offline or str(raw_offline).strip() == "") and FRONTEND_DIST_DIR:
+            try:
+                # Typical structure: <root>/ClientRuntime/frontend or <root>/frontend/dist
+                dist_dir = FRONTEND_DIST_DIR
+                parent = os.path.dirname(dist_dir)
+                grandparent = os.path.dirname(parent)
+                offline_default = None
+                if os.path.basename(parent).lower() == "frontend" and os.path.basename(grandparent).lower() == "clientruntime":
+                    offline_default = grandparent
+                elif os.path.basename(parent).lower() == "frontend":
+                    offline_default = grandparent
+                else:
+                    offline_default = parent
+                if offline_default:
+                    result["offline_path"] = offline_default
+                    updated_fields["offline_path"] = offline_default
+            except Exception:
+                pass
+        # Persist back defaults so that next calls see them directly
+        if updated_fields:
+            try:
+                set_parts = ", ".join(f"{k} = :{k}" for k in updated_fields.keys())
+                params = dict(updated_fields)
+                conn.execute(text(f"UPDATE system_settings SET {set_parts}"), params)
+            except Exception:
+                pass
         try:
             pc = compute_product_code()
             expected_key = compute_license_key_for_code(pc)
@@ -2046,6 +2141,7 @@ def update_settings(settings_update: schemas.SystemSettingsBase, db: Session = D
             "commission_enabled","commission_percent","auto_backup_enabled","auto_backup_frequency",
             "sms_provider","twilio_account_sid","twilio_auth_token","twilio_sms_from","twilio_whatsapp_from",
             "payment_enabled","payment_provider","razorpay_key_id","razorpay_key_secret","razorpay_webhook_secret",
+            "frontend_url","backend_url","offline_path",
             "license_key","license_active","license_valid_till",
             "trial_enabled","trial_start_date","trial_days"
         ]:
@@ -2104,6 +2200,27 @@ def update_payment_keys(keys: dict, db: Session = Depends(get_db)):
             conn.execute(text(f"UPDATE system_settings SET {', '.join(updates)}"), params)
     return get_settings(db)
 
+@app.post("/settings/urls")
+def update_url_settings(keys: dict, db: Session = Depends(get_db)):
+    migrate_settings_table_if_needed()
+    ensure_settings_columns()
+    allowed = {"frontend_url","backend_url","offline_path"}
+    payload = {k: v for k, v in (keys or {}).items() if k in allowed}
+    with database.engine.begin() as conn:
+        cols = {c['name'] for c in inspect(database.engine).get_columns('system_settings')}
+        cnt = conn.execute(text("SELECT COUNT(1) AS cnt FROM system_settings")).fetchone()
+        if not cnt or (cnt['cnt'] if isinstance(cnt, dict) else cnt[0]) == 0:
+            conn.execute(text("INSERT INTO system_settings (app_name, company_name) VALUES ('Finance Manager','')"))
+        updates = []
+        params = {}
+        for key, val in payload.items():
+            if key in cols:
+                updates.append(f"{key} = :{key}")
+                params[key] = val
+        if updates:
+            conn.execute(text(f"UPDATE system_settings SET {', '.join(updates)}"), params)
+    return get_settings(db)
+
 @app.post("/settings/backup")
 def backup_settings(db: Session = Depends(get_db)):
     ensure_settings_columns()
@@ -2118,6 +2235,9 @@ def backup_settings(db: Session = Depends(get_db)):
         "commission_percent": settings["commission_percent"],
         "auto_backup_enabled": settings["auto_backup_enabled"],
         "auto_backup_frequency": settings["auto_backup_frequency"],
+        "frontend_url": settings.get("frontend_url"),
+        "backend_url": settings.get("backend_url"),
+        "offline_path": settings.get("offline_path"),
         "backup_at": datetime.now().isoformat()
     }
     backup = models.SettingsBackup(data=json.dumps(payload))
@@ -2154,7 +2274,8 @@ def restore_latest_settings_backup(db: Session = Depends(get_db)):
         updates = []
         params = {}
         for key in ["app_name","company_name","company_address","company_phone","logo_base64",
-                    "commission_enabled","commission_percent","auto_backup_enabled","auto_backup_frequency"]:
+                    "commission_enabled","commission_percent","auto_backup_enabled","auto_backup_frequency",
+                    "frontend_url","backend_url","offline_path"]:
             if key in cols and key in data:
                 updates.append(f"{key} = :{key}")
                 val = data[key]
@@ -2214,6 +2335,7 @@ def diagnostics_summary(db: Session = Depends(get_db)):
         npm_version = out.strip()
     except Exception:
         npm_version = None
+    settings = get_settings(db)
     return {
         "app_name": "Finance Manager",
         "product_code": compute_product_code(),
@@ -2223,7 +2345,10 @@ def diagnostics_summary(db: Session = Depends(get_db)):
         "db_stats": stats,
         "node_version": node_version,
         "npm_version": npm_version,
-        "license_active": getattr(get_settings(db), "get", lambda k, d=None: d)("license_active", False),
+        "license_active": getattr(settings, "get", lambda k, d=None: d)("license_active", False),
+        "frontend_url": getattr(settings, "get", lambda k, d=None: d)("frontend_url", None),
+        "backend_url": getattr(settings, "get", lambda k, d=None: d)("backend_url", None),
+        "offline_path": getattr(settings, "get", lambda k, d=None: d)("offline_path", None),
         "db_integrity": _db_integrity_check(),
         "files": files_info,
     }

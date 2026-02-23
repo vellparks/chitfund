@@ -140,12 +140,22 @@ def send_whatsapp_notification(phone_number: str, message: str):
     return True
 
 def send_app_notification(customer_id: int, message: str):
-    """
-    Simulates sending an In-App notification.
-    In production, this would use Firebase Cloud Messaging (FCM) or WebSockets.
-    """
     logger.info(f"--- IN-APP NOTIFICATION SENT ---")
     logger.info(f"To Customer ID: {customer_id}")
     logger.info(f"Message: {message}")
     logger.info(f"--------------------------------")
+    try:
+        from models import AppNotification
+        SessionLocal = database.SessionLocal
+        session = SessionLocal()
+        try:
+            notif = AppNotification(customer_id=customer_id, message=message, is_read=False)
+            session.add(notif)
+            session.commit()
+        except Exception:
+            session.rollback()
+        finally:
+            session.close()
+    except Exception:
+        pass
     return True

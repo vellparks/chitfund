@@ -64,6 +64,9 @@ class SystemSettingsBase(BaseModel):
     razorpay_key_id: Optional[str] = None
     razorpay_key_secret: Optional[str] = None
     razorpay_webhook_secret: Optional[str] = None
+    frontend_url: Optional[str] = None
+    backend_url: Optional[str] = None
+    offline_path: Optional[str] = None
     license_key: Optional[str] = None
     license_active: bool = False
     license_valid_till: Optional[str] = None

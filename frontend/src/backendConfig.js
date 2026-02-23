@@ -23,6 +23,23 @@ export function setBackendMode(mode) {
 
 export function getApiBase() {
   const mode = getBackendMode();
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem('system_settings_last');
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (
+          mode === BACKEND_MODES.CLOUD &&
+          s &&
+          typeof s.backend_url === 'string' &&
+          s.backend_url.trim().length > 0
+        ) {
+          return s.backend_url.trim();
+        }
+      }
+    } catch (e) {
+      e;
+    }
+  }
   return mode === BACKEND_MODES.LOCAL ? LOCAL_BASE : CLOUD_BASE;
 }
-

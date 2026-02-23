@@ -62,6 +62,8 @@ function App() {
   const [backendOnline, setBackendOnline] = useState(true);
   const [backendChecked, setBackendChecked] = useState(false);
   const [currentOperation, setCurrentOperation] = useState('Login');
+  const [zoomPercent, setZoomPercent] = useState(100);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const themes = {
     blue: {
@@ -278,6 +280,68 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const clamped = Math.min(150, Math.max(80, zoomPercent));
+    document.documentElement.style.fontSize = `${clamped}%`;
+  }, [zoomPercent]);
+
+  useEffect(() => {
+    const handler = () => {
+      const fsElement =
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement;
+      setIsFullscreen(!!fsElement);
+    };
+    document.addEventListener('fullscreenchange', handler);
+    document.addEventListener('webkitfullscreenchange', handler);
+    document.addEventListener('mozfullscreenchange', handler);
+    document.addEventListener('MSFullscreenChange', handler);
+    return () => {
+      document.removeEventListener('fullscreenchange', handler);
+      document.removeEventListener('webkitfullscreenchange', handler);
+      document.removeEventListener('mozfullscreenchange', handler);
+      document.removeEventListener('MSFullscreenChange', handler);
+    };
+  }, []);
+
+  const handleZoomOut = () => {
+    setZoomPercent(z => Math.max(80, z - 10));
+  };
+
+  const handleZoomReset = () => {
+    setZoomPercent(100);
+  };
+
+  const handleZoomIn = () => {
+    setZoomPercent(z => Math.min(150, z + 10));
+  };
+
+  const handleToggleFullscreen = () => {
+    try {
+      if (
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      ) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+      } else {
+        const el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+        else if (el.msRequestFullscreen) el.msRequestFullscreen();
+      }
+    } catch (e) {
+      console.error('Fullscreen toggle error:', e);
+    }
+  };
+
+  useEffect(() => {
     let timer;
     const ping = async () => {
       await fetchSystemSettings();
@@ -468,6 +532,94 @@ function App() {
           >
             Server: {backendOnline ? 'Online' : 'Offline'}
           </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={handleToggleFullscreen}
+              title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              style={{
+                width: 'auto',
+                padding: '0.35rem 0.6rem',
+                fontSize: '0.8rem',
+                borderRadius: '999px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--menu-bg)',
+                cursor: 'pointer',
+              }}
+            >
+              {isFullscreen ? '⤢ Exit' : '⤢ Full'}
+            </button>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                backgroundColor: 'var(--menu-bg)',
+                borderRadius: '999px',
+                padding: '0.2rem 0.4rem',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                style={{
+                  width: 'auto',
+                  padding: '0.2rem 0.45rem',
+                  fontSize: '0.8rem',
+                  borderRadius: '999px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                −
+              </button>
+              <span
+                style={{
+                  fontSize: '0.8rem',
+                  minWidth: '2.5rem',
+                  textAlign: 'center',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                {zoomPercent}%
+              </span>
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                style={{
+                  width: 'auto',
+                  padding: '0.2rem 0.45rem',
+                  fontSize: '0.8rem',
+                  borderRadius: '999px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                onClick={handleZoomReset}
+                title="Reset zoom"
+                style={{
+                  width: 'auto',
+                  padding: '0.2rem 0.45rem',
+                  fontSize: '0.75rem',
+                  borderRadius: '999px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                  color: 'var(--primary-color)',
+                  fontWeight: 600,
+                }}
+              >
+                100%
+              </button>
+            </div>
+          </div>
           <button 
             onClick={handleLogout}
             style={{ 

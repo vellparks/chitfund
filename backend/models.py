@@ -96,3 +96,12 @@ class Expense(Base):
     date = Column(Date, default=datetime.now().date)
     created_at = Column(DateTime, default=datetime.now)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True) # ID of admin/staff who added it
+
+class AppNotification(Base):
+    __tablename__ = "app_notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), index=True, nullable=False)
+    message = Column(String)
+    created_at = Column(DateTime, default=datetime.now)
+    is_read = Column(Boolean, default=False)

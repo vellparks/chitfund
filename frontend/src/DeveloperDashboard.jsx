@@ -529,36 +529,27 @@ function DeveloperDashboard({ user, systemSettings }) {
         style={{
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: '1.5rem'
+          gap: '2rem',
+          paddingBottom: '0.75rem',
+          borderBottom: '1px solid var(--border-color)',
+          marginBottom: '1.5rem',
+          flexWrap: 'wrap'
         }}
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            flexWrap: 'wrap',
-            gap: '0.4rem',
-            padding: '0.25rem',
-            borderRadius: '999px',
-            backgroundColor: 'rgba(15,23,42,0.04)',
-            border: '1px solid var(--border-color)',
-            boxShadow: '0 1px 2px rgba(15,23,42,0.08)'
-          }}
-        >
         <button
           type="button"
           onClick={() => setActiveTab('connectivity')}
           style={{
-            borderRadius: '999px',
-            border: activeTab === 'connectivity' ? '1px solid var(--primary-color)' : '1px solid transparent',
-            backgroundColor: activeTab === 'connectivity' ? 'var(--primary-color)' : 'transparent',
-            padding: '0.45rem 0.9rem',
+            border: 'none',
+            borderBottom: activeTab === 'connectivity' ? '3px solid var(--primary-color)' : '3px solid transparent',
+            backgroundColor: 'transparent',
+            padding: '0.5rem 0.75rem',
             cursor: 'pointer',
-            fontSize: '0.9rem',
+            fontSize: '1rem',
             fontWeight: activeTab === 'connectivity' ? 600 : 500,
-            color: activeTab === 'connectivity' ? '#ffffff' : 'var(--text-muted)',
-            minWidth: '160px',
-            textAlign: 'center',
-            transition: 'background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease'
+            color: activeTab === 'connectivity' ? 'var(--primary-color)' : 'var(--text-muted)',
+            minWidth: '180px',
+            textAlign: 'center'
           }}
         >
           Backend / Connectivity
@@ -567,17 +558,16 @@ function DeveloperDashboard({ user, systemSettings }) {
           type="button"
           onClick={() => setActiveTab('license')}
           style={{
-            borderRadius: '999px',
-            border: activeTab === 'license' ? '1px solid var(--primary-color)' : '1px solid transparent',
-            backgroundColor: activeTab === 'license' ? 'var(--primary-color)' : 'transparent',
-            padding: '0.45rem 0.9rem',
+            border: 'none',
+            borderBottom: activeTab === 'license' ? '3px solid var(--primary-color)' : '3px solid transparent',
+            backgroundColor: 'transparent',
+            padding: '0.5rem 0.75rem',
             cursor: 'pointer',
-            fontSize: '0.9rem',
+            fontSize: '1rem',
             fontWeight: activeTab === 'license' ? 600 : 500,
-            color: activeTab === 'license' ? '#ffffff' : 'var(--text-muted)',
-            minWidth: '140px',
-            textAlign: 'center',
-            transition: 'background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease'
+            color: activeTab === 'license' ? 'var(--primary-color)' : 'var(--text-muted)',
+            minWidth: '150px',
+            textAlign: 'center'
           }}
         >
           License / Trial
@@ -586,17 +576,16 @@ function DeveloperDashboard({ user, systemSettings }) {
           type="button"
           onClick={() => setActiveTab('maintenance')}
           style={{
-            borderRadius: '999px',
-            border: activeTab === 'maintenance' ? '1px solid var(--primary-color)' : '1px solid transparent',
-            backgroundColor: activeTab === 'maintenance' ? 'var(--primary-color)' : 'transparent',
-            padding: '0.45rem 0.9rem',
+            border: 'none',
+            borderBottom: activeTab === 'maintenance' ? '3px solid var(--primary-color)' : '3px solid transparent',
+            backgroundColor: 'transparent',
+            padding: '0.5rem 0.75rem',
             cursor: 'pointer',
-            fontSize: '0.9rem',
+            fontSize: '1rem',
             fontWeight: activeTab === 'maintenance' ? 600 : 500,
-            color: activeTab === 'maintenance' ? '#ffffff' : 'var(--text-muted)',
-            minWidth: '170px',
-            textAlign: 'center',
-            transition: 'background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease'
+            color: activeTab === 'maintenance' ? 'var(--primary-color)' : 'var(--text-muted)',
+            minWidth: '190px',
+            textAlign: 'center'
           }}
         >
           Updates / Sample Data
@@ -605,22 +594,20 @@ function DeveloperDashboard({ user, systemSettings }) {
           type="button"
           onClick={() => setActiveTab('health')}
           style={{
-            borderRadius: '999px',
-            border: activeTab === 'health' ? '1px solid var(--primary-color)' : '1px solid transparent',
-            backgroundColor: activeTab === 'health' ? 'var(--primary-color)' : 'transparent',
-            padding: '0.45rem 0.9rem',
+            border: 'none',
+            borderBottom: activeTab === 'health' ? '3px solid var(--primary-color)' : '3px solid transparent',
+            backgroundColor: 'transparent',
+            padding: '0.5rem 0.75rem',
             cursor: 'pointer',
-            fontSize: '0.9rem',
+            fontSize: '1rem',
             fontWeight: activeTab === 'health' ? 600 : 500,
-            color: activeTab === 'health' ? '#ffffff' : 'var(--text-muted)',
-            minWidth: '140px',
-            textAlign: 'center',
-            transition: 'background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease'
+            color: activeTab === 'health' ? 'var(--primary-color)' : 'var(--text-muted)',
+            minWidth: '150px',
+            textAlign: 'center'
           }}
         >
           Health / Install
         </button>
-      </div>
       </div>
 
       {activeTab === 'connectivity' && (

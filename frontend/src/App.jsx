@@ -206,7 +206,10 @@ function App() {
           license_valid_till: s.license_valid_till || null,
           trial_enabled: !!s.trial_enabled,
           trial_start_date: s.trial_start_date || null,
-          trial_days: s.trial_days ?? 0
+          trial_days: s.trial_days ?? 0,
+          frontend_url: s.frontend_url || null,
+          backend_url: s.backend_url || null,
+          offline_path: s.offline_path || null
         };
         try {
           const lastRaw = localStorage.getItem('system_settings_last');
@@ -253,7 +256,10 @@ function App() {
             payment_provider: s.payment_provider || 'razorpay',
             razorpay_key_id: s.razorpay_key_id || null,
             razorpay_key_secret: s.razorpay_key_secret || null,
-            razorpay_webhook_secret: s.razorpay_webhook_secret || null
+            razorpay_webhook_secret: s.razorpay_webhook_secret || null,
+            frontend_url: s.frontend_url || null,
+            backend_url: s.backend_url || null,
+            offline_path: s.offline_path || null
           }));
         }
       } catch (e) { e; }

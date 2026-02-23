@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getApiBase, getBackendMode, setBackendMode, BACKEND_MODES } from './backendConfig';
 
+const DEFAULT_CLOUD_FRONTEND_URL = 'https://chitfund-frontend.onrender.com';
+
 function DeveloperDashboard({ user, systemSettings }) {
   const [backendStatus, setBackendStatus] = useState({ ok: false, error: null });
   const [dbStatus, setDbStatus] = useState({ ok: false, users: 0, customers: 0, error: null });
@@ -20,7 +22,9 @@ function DeveloperDashboard({ user, systemSettings }) {
   const [offlineFile, setOfflineFile] = useState(null);
   const [offlineStatus, setOfflineStatus] = useState({ loading: false, message: null, error: null });
   const [backendMode, setBackendModeState] = useState(getBackendMode());
-  const [cloudFrontendUrl, setCloudFrontendUrl] = useState(systemSettings?.frontend_url || '');
+  const [cloudFrontendUrl, setCloudFrontendUrl] = useState(
+    systemSettings?.frontend_url || DEFAULT_CLOUD_FRONTEND_URL
+  );
   const [cloudBackendUrl, setCloudBackendUrl] = useState(systemSettings?.backend_url || '');
   const [offlinePath, setOfflinePath] = useState(systemSettings?.offline_path || '');
   const [urlStatus, setUrlStatus] = useState({ message: null, error: null });
@@ -123,7 +127,7 @@ function DeveloperDashboard({ user, systemSettings }) {
       setTrialInfo({ status: 'unknown', message: 'Trial status unavailable' });
     }
     try {
-      setCloudFrontendUrl(systemSettings?.frontend_url || '');
+      setCloudFrontendUrl(systemSettings?.frontend_url || DEFAULT_CLOUD_FRONTEND_URL);
       setCloudBackendUrl(systemSettings?.backend_url || '');
       setOfflinePath(systemSettings?.offline_path || '');
     } catch (e) { e; }

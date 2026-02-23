@@ -182,15 +182,17 @@ function DeveloperDashboard({ user, systemSettings }) {
           error: null
         });
       } else {
+        const baseError =
+          data.message ||
+          (data.git_available === false
+            ? 'Git not available on this system. Install Git and try again.'
+            : 'App update failed.');
+        const details = (data.stderr || data.stdout || '').trim();
+        const fullError = details ? `${baseError} – ${details}` : baseError;
         setUpdateStatus({
           loading: false,
           message: null,
-          error:
-            data.message ||
-            data.stderr ||
-            (data.git_available === false
-              ? 'Git not available on this system. Install Git and try again.'
-              : 'App update failed. See backend logs for details.')
+          error: fullError
         });
       }
     } catch (error) {
@@ -528,86 +530,62 @@ function DeveloperDashboard({ user, systemSettings }) {
       <div
         style={{
           display: 'flex',
-          justifyContent: 'center',
-          gap: '2rem',
-          paddingBottom: '0.75rem',
-          borderBottom: '1px solid var(--border-color)',
-          marginBottom: '1.5rem',
-          flexWrap: 'wrap'
+          gap: '0.5rem',
+          marginBottom: '2rem',
+          padding: '0.5rem',
+          backgroundColor: 'var(--menu-bg)',
+          borderRadius: '12px',
+          width: '100%',
+          flexWrap: 'wrap',
+          alignItems: 'center'
         }}
       >
-        <button
-          type="button"
-          onClick={() => setActiveTab('connectivity')}
-          style={{
-            border: 'none',
-            borderBottom: activeTab === 'connectivity' ? '3px solid var(--primary-color)' : '3px solid transparent',
-            backgroundColor: 'transparent',
-            padding: '0.5rem 0.75rem',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: activeTab === 'connectivity' ? 600 : 500,
-            color: activeTab === 'connectivity' ? 'var(--primary-color)' : 'var(--text-muted)',
-            minWidth: '180px',
-            textAlign: 'center'
-          }}
-        >
-          Backend / Connectivity
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('license')}
-          style={{
-            border: 'none',
-            borderBottom: activeTab === 'license' ? '3px solid var(--primary-color)' : '3px solid transparent',
-            backgroundColor: 'transparent',
-            padding: '0.5rem 0.75rem',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: activeTab === 'license' ? 600 : 500,
-            color: activeTab === 'license' ? 'var(--primary-color)' : 'var(--text-muted)',
-            minWidth: '150px',
-            textAlign: 'center'
-          }}
-        >
-          License / Trial
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('maintenance')}
-          style={{
-            border: 'none',
-            borderBottom: activeTab === 'maintenance' ? '3px solid var(--primary-color)' : '3px solid transparent',
-            backgroundColor: 'transparent',
-            padding: '0.5rem 0.75rem',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: activeTab === 'maintenance' ? 600 : 500,
-            color: activeTab === 'maintenance' ? 'var(--primary-color)' : 'var(--text-muted)',
-            minWidth: '190px',
-            textAlign: 'center'
-          }}
-        >
-          Updates / Sample Data
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('health')}
-          style={{
-            border: 'none',
-            borderBottom: activeTab === 'health' ? '3px solid var(--primary-color)' : '3px solid transparent',
-            backgroundColor: 'transparent',
-            padding: '0.5rem 0.75rem',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: activeTab === 'health' ? 600 : 500,
-            color: activeTab === 'health' ? 'var(--primary-color)' : 'var(--text-muted)',
-            minWidth: '150px',
-            textAlign: 'center'
-          }}
-        >
-          Health / Install
-        </button>
+        {[
+          { id: 'connectivity', label: 'Backend / Connectivity 🌐' },
+          'divider',
+          { id: 'license', label: 'License / Trial 🔑' },
+          'divider',
+          { id: 'maintenance', label: 'Updates / Sample Data 🛠️' },
+          'divider',
+          { id: 'health', label: 'Health / Install 🧪' }
+        ].map((item, idx) => {
+          if (item === 'divider') {
+            return (
+              <span
+                key={`div-${idx}`}
+                style={{
+                  width: '1px',
+                  height: '26px',
+                  background: 'var(--border-color)',
+                  alignSelf: 'center',
+                  margin: '0 0.25rem'
+                }}
+              />
+            );
+          }
+          const tab = item;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                backgroundColor: isActive ? '#ffffff' : 'transparent',
+                color: isActive ? 'var(--primary-color)' : 'var(--text-muted)',
+                width: 'auto',
+                padding: '0.55rem 1.15rem',
+                borderRadius: '999px',
+                border: isActive ? '1px solid var(--primary-color)' : '1px solid transparent',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {activeTab === 'connectivity' && (

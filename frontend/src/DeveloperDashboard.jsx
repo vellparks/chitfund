@@ -168,6 +168,13 @@ function DeveloperDashboard({ user, systemSettings }) {
     handleCheckDb();
     if (mode === BACKEND_MODES.LOCAL) {
       handleOfflineScan();
+      try {
+        const el = document.getElementById('offline-install-path-input');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.focus();
+        }
+      } catch (e) { e; }
     }
   }
 
@@ -719,6 +726,7 @@ function DeveloperDashboard({ user, systemSettings }) {
                 </label>
                 <input
                   type="text"
+                  id="offline-install-path-input"
                   value={offlinePath}
                   onChange={(e) => setOfflinePath(e.target.value)}
                   placeholder="உதா: D:\chit fund\ClientRuntime"

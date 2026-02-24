@@ -299,9 +299,13 @@ function DeveloperDashboard({ user, systemSettings }) {
         error: null
       });
     } catch (error) {
+      let msg = error.message || String(error);
+      if (msg === 'Network Error') {
+        msg = 'Network Error: Backend server unreachable. Is it running? (Backend server-ஐ start செய்யவும்)';
+      }
       setUrlStatus({
         message: null,
-        error: error.message || String(error)
+        error: msg
       });
     }
   }

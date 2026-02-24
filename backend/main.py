@@ -213,6 +213,14 @@ ensure_settings_columns()
 
 def migrate_settings_table_if_needed():
     try:
+        inspector = inspect(database.engine)
+        columns = {c['name'] for c in inspector.get_columns('system_settings')}
+        if "frontend_url" in columns and "backend_url" in columns and "offline_path" in columns:
+            return
+    except Exception:
+        pass
+
+    try:
         with database.engine.begin() as conn:
             conn.execute(text("DROP TABLE IF EXISTS system_settings_new"))
             conn.execute(text("""
@@ -2432,7 +2440,7 @@ def maintenance_update_app():
     root_dir = os.path.dirname(os.path.dirname(__file__))
     try:
         result = subprocess.run(
-            ["git", "-C", root_dir, "pull"],
+            ["git", "-C", root_dir, "pull", "origin", "main"],
             capture_output=True,
             text=True,
             timeout=300
